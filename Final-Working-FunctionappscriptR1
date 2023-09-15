@@ -7,7 +7,7 @@ $subscriptionId = "subscriptionIDHere"
 Connect-AzAccount -Identity
 
 # Set your teams webhook URL
-$teamsWebhookUrl = “https:/WwebhookURLhere"
+$teamsWebhookUrl = “https:/WwebhookURLhere!"
 
 # Get all Key Vaults in the subscription
 $KeyVaults = Get-AzKeyVault -SubscriptionId $subscriptionId
