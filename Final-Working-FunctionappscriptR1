@@ -1,0 +1,59 @@
+# Input bindings are passed in via param block.
+param($Timer)
+Write-Host "Running"
+
+# Connect to subscription
+$subscriptionId = "182babc3-9244-4840-95f2-a82c26c05138"
+Connect-AzAccount -Identity
+
+# Set your teams webhook URL
+$teamsWebhookUrl = “https://dteenergy.webhook.office.com/webhookb2/d599c2f2-6dc5-4c4e-84d3-37f1ad843275@8e61d5fe-7749-4e76-88ee-6d8799ae8143/IncomingWebhook/e1011ca086764f3184c71b3cbffee501/f7260285-7faf-4581-a9da-55879bc9d539"
+
+# Get all Key Vaults in the subscription
+$KeyVaults = Get-AzKeyVault -SubscriptionId $subscriptionId
+
+# Loop through KeyVaults
+foreach ($vault in $keyVaults) {
+    $vaultName = $vault.VaultName
+    $expiryThreshold = (Get-Date).AddDays(90)
+    $expiringOrExpiredItems = @()
+
+    # Retrieve secrets
+    $secrets = Get-AzKeyVaultSecret -VaultName $vaultName
+    foreach ($secret in $secrets) {
+        if ($secret.Expires -le $expiryThreshold) {
+            $expiringOrExpiredItems += "Secret: $($secret.Name), Expiry: $($secret.Expires)"
+        }
+    }
+
+    # Retrieve keys
+    $keys = Get-AzKeyVaultKey -VaultName $vaultName
+    foreach ($key in $keys) {
+        if ($key.Expires -le $expiryThreshold) {
+            $expiringOrExpiredItems += "Key: $($key.Name), Expiry: $($key.Expires)"
+        }
+    }
+
+    # Retrieve certificates
+    $certificates = Get-AzKeyVaultCertificate -VaultName $vaultName
+    foreach ($certificate in $certificates) {
+        if ($certificate.Expires -le $expiryThreshold) {
+            $expiringOrExpiredItems += "Certificate: $($certificate.Name), Expiry: $($certificate.Expires)"
+        }
+    }
+
+    # If there are expiring/expired items, send a Teams notification
+    if ($expiringOrExpiredItems.Count -gt 0) {
+        $message = @{
+            title = "Azure KeyVault Expiring/Expired Items"
+            text = "Here are the items expiring or expired in KeyVault $($vaultName):`r`n$($expiringOrExpiredItems -join "`r`n")"
+        }
+        $messageJson = $message | ConvertTo-Json
+
+        # Send data to Teams webhook
+        Invoke-RestMethod -Uri $teamsWebhookUrl -Method Post -ContentType "application/json" -Body $messageJson
+    }
+}
+
+# Write an information log with the current time.
+Write-Host "PowerShell timer trigger function ran! TIME: $currentUTCtime"
