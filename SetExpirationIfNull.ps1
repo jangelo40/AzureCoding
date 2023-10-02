@@ -4,7 +4,7 @@
 #Connect-AzAccount
 
 # Set the subscription to target
-Set-AzContext -SubscriptionName "f24566cb-ae7f-4a20-95b5-9f412f485694"
+Set-AzContext -SubscriptionName "SubscriptionIDHere"
 
 # Get all KeyVaults in the current subscription
 $keyVaults = Get-AzKeyVault
